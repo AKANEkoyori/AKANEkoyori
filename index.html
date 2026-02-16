@@ -1,10 +1,494 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>私のポートフォリオ</title>
-  </head>
-  <body>
-    <h1>Hello, World!</h1>
-    <p>私のWebサイトへようこそ！</p>
-  </body>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily 1 App Challenge | AKANE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cyber: {
+              bg: '#0a0a0f',
+              card: '#12121a',
+              border: '#1e1e2e',
+              accent: '#00f0ff',
+              accent2: '#b400ff',
+              pink: '#ff2d7b',
+              green: '#00ff88',
+              text: '#e0e0e8',
+              muted: '#6b6b80',
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0f;
+      color: #e0e0e8;
+      font-family: 'Noto Sans JP', 'JetBrains Mono', sans-serif;
+      overflow-x: hidden;
+    }
+    /* ── Code Rain Canvas ── */
+    #code-rain {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    /* ── Glow effects ── */
+    .glow-cyan { text-shadow: 0 0 20px rgba(0,240,255,0.5), 0 0 60px rgba(0,240,255,0.2); }
+    .glow-pink { text-shadow: 0 0 20px rgba(255,45,123,0.5), 0 0 60px rgba(255,45,123,0.2); }
+    .glow-box-cyan { box-shadow: 0 0 20px rgba(0,240,255,0.15), inset 0 0 20px rgba(0,240,255,0.05); }
+    .glow-box-pink { box-shadow: 0 0 20px rgba(255,45,123,0.15), inset 0 0 20px rgba(255,45,123,0.05); }
+    .glow-box-green { box-shadow: 0 0 20px rgba(0,255,136,0.15), inset 0 0 20px rgba(0,255,136,0.05); }
+    /* ── Gradient border trick ── */
+    .gradient-border {
+      position: relative;
+      border-radius: 16px;
+      background: #12121a;
+    }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 17px;
+      background: linear-gradient(135deg, #00f0ff, #b400ff, #ff2d7b);
+      z-index: -1;
+      opacity: 0.6;
+      transition: opacity 0.3s;
+    }
+    .gradient-border:hover::before { opacity: 1; }
+    /* ── Streak counter pulse ── */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(0,255,136,0.2); }
+      50% { box-shadow: 0 0 40px rgba(0,255,136,0.5), 0 0 80px rgba(0,255,136,0.2); }
+    }
+    .pulse-green { animation: pulse-glow 2s ease-in-out infinite; }
+    /* ── Floating animation ── */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .float { animation: float 3s ease-in-out infinite; }
+    /* ── Typing effect ── */
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    .cursor-blink::after {
+      content: '|';
+      animation: blink 1s step-end infinite;
+      color: #00f0ff;
+    }
+    /* ── App card hover ── */
+    .app-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .app-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 10px 40px rgba(0,240,255,0.15);
+    }
+    /* ── Tag style ── */
+    .tag {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      border: 1px solid;
+    }
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #1e1e2e; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00f0ff; }
+    /* ── Section fade-in ── */
+    .fade-section {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .fade-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="relative">
+
+  <!-- Code Rain Background -->
+  <canvas id="code-rain"></canvas>
+
+  <!-- ============================== -->
+  <!-- NAV -->
+  <!-- ============================== -->
+  <nav class="fixed top-0 w-full z-50 backdrop-blur-md bg-cyber-bg/70 border-b border-cyber-border">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+      <a href="#" class="font-mono font-bold text-lg">
+        <span class="text-cyber-accent">{'</span><span class="text-white">AKANE</span><span class="text-cyber-accent">'}</span>
+      </a>
+      <div class="hidden md:flex gap-6 text-sm font-mono text-cyber-muted">
+        <a href="#today" class="hover:text-cyber-accent transition">Today</a>
+        <a href="#archive" class="hover:text-cyber-accent transition">Archive</a>
+        <a href="#status" class="hover:text-cyber-accent transition">Status</a>
+        <a href="#about" class="hover:text-cyber-accent transition">About</a>
+      </div>
+      <button id="mobile-menu-btn" class="md:hidden text-cyber-accent text-2xl">&#9776;</button>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden px-4 pb-4 space-y-2 text-sm font-mono text-cyber-muted">
+      <a href="#today" class="block hover:text-cyber-accent transition">Today</a>
+      <a href="#archive" class="block hover:text-cyber-accent transition">Archive</a>
+      <a href="#status" class="block hover:text-cyber-accent transition">Status</a>
+      <a href="#about" class="block hover:text-cyber-accent transition">About</a>
+    </div>
+  </nav>
+
+  <!-- ============================== -->
+  <!-- HERO -->
+  <!-- ============================== -->
+  <section class="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 text-center">
+    <!-- Decorative circles -->
+    <div class="absolute w-[500px] h-[500px] rounded-full bg-cyber-accent/5 blur-3xl -top-20 -left-20 pointer-events-none"></div>
+    <div class="absolute w-[400px] h-[400px] rounded-full bg-cyber-accent2/5 blur-3xl -bottom-20 -right-20 pointer-events-none"></div>
+
+    <p class="font-mono text-cyber-accent text-sm md:text-base mb-4 tracking-widest uppercase">Vibe Coding Every Day</p>
+    <h1 class="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-tight mb-6">
+      <span class="text-white">Daily</span>
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-accent via-cyber-accent2 to-cyber-pink"> 1 App</span><br>
+      <span class="text-white">Challenge</span>
+    </h1>
+    <p class="text-cyber-muted text-base md:text-lg max-w-xl mb-8 leading-relaxed">
+      バイブコーディングで何でも作る。<br class="md:hidden">毎日1アプリ作る学生。
+    </p>
+
+    <!-- Streak badge -->
+    <div class="pulse-green gradient-border px-6 py-3 flex items-center gap-3 mb-10">
+      <span class="text-cyber-green text-2xl font-bold font-mono" id="hero-streak">15</span>
+      <span class="text-cyber-muted text-sm">日連続作成中</span>
+      <span class="text-2xl">&#x1F525;</span>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 float">
+      <div class="w-6 h-10 border-2 border-cyber-muted/30 rounded-full flex justify-center pt-2">
+        <div class="w-1.5 h-3 bg-cyber-accent rounded-full animate-bounce"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== -->
+  <!-- TODAY'S APP -->
+  <!-- ============================== -->
+  <section id="today" class="relative z-10 py-20 px-4 fade-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-3 h-3 rounded-full bg-cyber-pink animate-pulse"></div>
+        <h2 class="font-mono text-cyber-pink text-sm tracking-widest uppercase">Today's App</h2>
+        <span class="font-mono text-cyber-muted text-xs" id="today-date"></span>
+      </div>
+
+      <div class="gradient-border p-6 md:p-8 glow-box-pink">
+        <div class="flex flex-col md:flex-row gap-6">
+          <!-- Screenshot placeholder -->
+          <div class="w-full md:w-1/2 aspect-video bg-gradient-to-br from-cyber-accent2/20 to-cyber-pink/20 rounded-xl flex items-center justify-center border border-cyber-border">
+            <div class="text-center">
+              <p class="text-4xl mb-2">&#x1F680;</p>
+              <p class="text-cyber-muted text-sm font-mono">Screenshot here</p>
+            </div>
+          </div>
+          <!-- Info -->
+          <div class="w-full md:w-1/2 flex flex-col justify-between">
+            <div>
+              <h3 class="text-2xl md:text-3xl font-bold text-white mb-2" id="today-app-name">AI Chat App</h3>
+              <p class="text-cyber-muted text-sm leading-relaxed mb-4" id="today-app-desc">
+                Claude APIを使ったリアルタイムチャットアプリ。ストリーミングレスポンス対応で、会話履歴も保存できる。
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4" id="today-app-tags">
+                <span class="tag border-cyber-accent text-cyber-accent">React</span>
+                <span class="tag border-cyber-accent2 text-cyber-accent2">Claude API</span>
+                <span class="tag border-cyber-green text-cyber-green">Vercel</span>
+              </div>
+            </div>
+            <div class="flex gap-3">
+              <a href="#" class="font-mono text-sm px-5 py-2.5 bg-gradient-to-r from-cyber-accent to-cyber-accent2 text-cyber-bg font-bold rounded-lg hover:opacity-80 transition">
+                Demo &#x2192;
+              </a>
+              <a href="#" class="font-mono text-sm px-5 py-2.5 border border-cyber-border text-cyber-text rounded-lg hover:border-cyber-accent hover:text-cyber-accent transition">
+                GitHub
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== -->
+  <!-- VIBES STATUS -->
+  <!-- ============================== -->
+  <section id="status" class="relative z-10 py-16 px-4 fade-section">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-3 h-3 rounded-full bg-cyber-green animate-pulse"></div>
+        <h2 class="font-mono text-cyber-green text-sm tracking-widest uppercase">Vibes Status</h2>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="gradient-border p-5 text-center glow-box-green">
+          <p class="text-3xl md:text-4xl font-black font-mono text-cyber-green" id="stat-streak">15</p>
+          <p class="text-cyber-muted text-xs mt-1 font-mono">連続日数</p>
+        </div>
+        <div class="gradient-border p-5 text-center glow-box-cyan">
+          <p class="text-3xl md:text-4xl font-black font-mono text-cyber-accent" id="stat-total">42</p>
+          <p class="text-cyber-muted text-xs mt-1 font-mono">総アプリ数</p>
+        </div>
+        <div class="gradient-border p-5 text-center glow-box-pink">
+          <p class="text-3xl md:text-4xl font-black font-mono text-cyber-pink" id="stat-languages">8</p>
+          <p class="text-cyber-muted text-xs mt-1 font-mono">使用言語</p>
+        </div>
+        <div class="gradient-border p-5 text-center" style="box-shadow: 0 0 20px rgba(180,0,255,0.15);">
+          <p class="text-3xl md:text-4xl font-black font-mono text-cyber-accent2" id="stat-commits">347</p>
+          <p class="text-cyber-muted text-xs mt-1 font-mono">コミット数</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== -->
+  <!-- APP ARCHIVE -->
+  <!-- ============================== -->
+  <section id="archive" class="relative z-10 py-20 px-4 fade-section">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="w-3 h-3 rounded-full bg-cyber-accent animate-pulse"></div>
+        <h2 class="font-mono text-cyber-accent text-sm tracking-widest uppercase">App Archive</h2>
+      </div>
+
+      <!-- Filter buttons -->
+      <div class="flex flex-wrap gap-2 mb-8">
+        <button class="filter-btn active font-mono text-xs px-4 py-2 rounded-full border border-cyber-accent text-cyber-accent bg-cyber-accent/10" data-filter="all">All</button>
+        <button class="filter-btn font-mono text-xs px-4 py-2 rounded-full border border-cyber-border text-cyber-muted hover:border-cyber-accent hover:text-cyber-accent transition" data-filter="web">Web</button>
+        <button class="filter-btn font-mono text-xs px-4 py-2 rounded-full border border-cyber-border text-cyber-muted hover:border-cyber-accent hover:text-cyber-accent transition" data-filter="mobile">Mobile</button>
+        <button class="filter-btn font-mono text-xs px-4 py-2 rounded-full border border-cyber-border text-cyber-muted hover:border-cyber-accent hover:text-cyber-accent transition" data-filter="ai">AI</button>
+        <button class="filter-btn font-mono text-xs px-4 py-2 rounded-full border border-cyber-border text-cyber-muted hover:border-cyber-accent hover:text-cyber-accent transition" data-filter="game">Game</button>
+        <button class="filter-btn font-mono text-xs px-4 py-2 rounded-full border border-cyber-border text-cyber-muted hover:border-cyber-accent hover:text-cyber-accent transition" data-filter="tool">Tool</button>
+      </div>
+
+      <!-- App Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="app-grid">
+        <!-- Cards are injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== -->
+  <!-- ABOUT -->
+  <!-- ============================== -->
+  <section id="about" class="relative z-10 py-20 px-4 fade-section">
+    <div class="max-w-3xl mx-auto text-center">
+      <div class="flex items-center justify-center gap-3 mb-8">
+        <div class="w-3 h-3 rounded-full bg-cyber-accent2 animate-pulse"></div>
+        <h2 class="font-mono text-cyber-accent2 text-sm tracking-widest uppercase">About</h2>
+      </div>
+
+      <div class="gradient-border p-8">
+        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyber-accent to-cyber-accent2 flex items-center justify-center text-4xl">
+          &#x1F9D1;&#x200D;&#x1F4BB;
+        </div>
+        <h3 class="text-2xl font-bold text-white mb-2">AKANE</h3>
+        <p class="text-cyber-accent font-mono text-sm mb-4">Student / Vibe Coder / Daily Builder</p>
+        <p class="text-cyber-muted text-sm leading-relaxed max-w-lg mx-auto mb-6">
+          「作りたい」と思ったら、その日のうちに形にする。<br>
+          AIと一緒にバイブコーディングで、毎日1つアプリを作り続けています。<br>
+          完璧じゃなくていい。動くものを、毎日出す。
+        </p>
+        <div class="flex justify-center gap-4">
+          <a href="https://github.com/AKANEkoyori" target="_blank"
+             class="font-mono text-sm px-4 py-2 border border-cyber-border text-cyber-muted rounded-lg hover:border-cyber-accent hover:text-cyber-accent transition">
+            GitHub
+          </a>
+          <a href="https://x.com/" target="_blank"
+             class="font-mono text-sm px-4 py-2 border border-cyber-border text-cyber-muted rounded-lg hover:border-cyber-accent hover:text-cyber-accent transition">
+            X (Twitter)
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== -->
+  <!-- FOOTER -->
+  <!-- ============================== -->
+  <footer class="relative z-10 py-8 border-t border-cyber-border text-center">
+    <p class="font-mono text-cyber-muted text-xs">
+      Built with <span class="text-cyber-pink">&#x2665;</span> & vibes &mdash; <span id="footer-year"></span> AKANE
+    </p>
+  </footer>
+
+  <!-- ============================== -->
+  <!-- JAVASCRIPT -->
+  <!-- ============================== -->
+  <script>
+  // ── Code Rain ──
+  (function initCodeRain() {
+    const canvas = document.getElementById('code-rain');
+    const ctx = canvas.getContext('2d');
+    let w, h, columns, drops;
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789{}[]<>/=;:const let var function return import export async await'.split('');
+    const fontSize = 14;
+
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+      columns = Math.floor(w / fontSize);
+      drops = Array(columns).fill(1);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function draw() {
+      ctx.fillStyle = 'rgba(10,10,15,0.05)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#00f0ff';
+      ctx.font = fontSize + 'px monospace';
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > h && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    setInterval(draw, 45);
+  })();
+
+  // ── Date display ──
+  const now = new Date();
+  document.getElementById('today-date').textContent =
+    now.getFullYear() + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + String(now.getDate()).padStart(2,'0');
+  document.getElementById('footer-year').textContent = now.getFullYear();
+
+  // ── Sample App Data ──
+  const apps = [
+    { day: 15, name: 'AI Chat App', desc: 'Claude APIを使ったリアルタイムチャット', category: 'ai', tags: ['React','Claude API','Vercel'], color: 'pink' },
+    { day: 14, name: 'Pixel Art Editor', desc: 'ブラウザで使えるドット絵エディタ', category: 'tool', tags: ['Canvas','Vue.js'], color: 'cyan' },
+    { day: 13, name: 'Weather Dashboard', desc: '天気予報をおしゃれに表示するダッシュボード', category: 'web', tags: ['API','Tailwind'], color: 'green' },
+    { day: 12, name: 'Snake Game', desc: 'クラシックなスネークゲームをモダンUIで', category: 'game', tags: ['Canvas','JavaScript'], color: 'accent2' },
+    { day: 11, name: 'Markdown Previewer', desc: 'リアルタイムプレビュー付きMDエディタ', category: 'tool', tags: ['React','Marked.js'], color: 'cyan' },
+    { day: 10, name: 'Pomodoro Timer', desc: 'サイバーパンク風ポモドーロタイマー', category: 'tool', tags: ['JavaScript','CSS'], color: 'pink' },
+    { day: 9, name: 'Image Generator', desc: 'AIで画像を生成するWebアプリ', category: 'ai', tags: ['Stable Diffusion','Next.js'], color: 'accent2' },
+    { day: 8, name: 'Todo + AI', desc: 'AIがタスクを自動分類するTodoアプリ', category: 'ai', tags: ['React','OpenAI'], color: 'green' },
+    { day: 7, name: 'Portfolio v1', desc: '最初のポートフォリオサイト', category: 'web', tags: ['HTML','CSS'], color: 'cyan' },
+    { day: 6, name: 'Quiz App', desc: '4択クイズアプリ（ランキング付き）', category: 'game', tags: ['React','Firebase'], color: 'pink' },
+    { day: 5, name: 'Expense Tracker', desc: '支出を記録・グラフ化するアプリ', category: 'web', tags: ['Chart.js','Vue.js'], color: 'green' },
+    { day: 4, name: 'Music Visualizer', desc: '音楽に合わせてビジュアルが動く', category: 'game', tags: ['Web Audio','Canvas'], color: 'accent2' },
+    { day: 3, name: 'URL Shortener', desc: 'シンプルなURL短縮サービス', category: 'tool', tags: ['Express','MongoDB'], color: 'cyan' },
+    { day: 2, name: 'Calculator', desc: '関数電卓風の計算機アプリ', category: 'tool', tags: ['JavaScript','CSS Grid'], color: 'pink' },
+    { day: 1, name: 'Hello World App', desc: '記念すべき最初のアプリ', category: 'web', tags: ['HTML','CSS','JS'], color: 'green' },
+  ];
+
+  const colorMap = {
+    cyan:    { border: 'border-cyan-400',    text: 'text-cyan-400',    bg: 'bg-cyan-400/10',    glow: 'glow-box-cyan' },
+    pink:    { border: 'border-pink-400',     text: 'text-pink-400',    bg: 'bg-pink-400/10',    glow: 'glow-box-pink' },
+    green:   { border: 'border-green-400',    text: 'text-green-400',   bg: 'bg-green-400/10',   glow: 'glow-box-green' },
+    accent2: { border: 'border-purple-400',   text: 'text-purple-400',  bg: 'bg-purple-400/10',  glow: '' },
+  };
+
+  function renderCards(filter = 'all') {
+    const grid = document.getElementById('app-grid');
+    grid.innerHTML = '';
+    const filtered = filter === 'all' ? apps : apps.filter(a => a.category === filter);
+    filtered.forEach((app, i) => {
+      const c = colorMap[app.color] || colorMap.cyan;
+      const card = document.createElement('div');
+      card.className = `app-card gradient-border p-5 ${c.glow}`;
+      card.style.animationDelay = `${i * 0.05}s`;
+      card.innerHTML = `
+        <div class="flex justify-between items-start mb-3">
+          <span class="font-mono text-xs ${c.text}">Day ${String(app.day).padStart(3,'0')}</span>
+          <span class="font-mono text-xs text-cyber-muted">${app.category}</span>
+        </div>
+        <h4 class="text-lg font-bold text-white mb-1">${app.name}</h4>
+        <p class="text-cyber-muted text-xs leading-relaxed mb-3">${app.desc}</p>
+        <div class="flex flex-wrap gap-1.5">
+          ${app.tags.map(t => `<span class="tag ${c.border} ${c.text}">${t}</span>`).join('')}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+  renderCards();
+
+  // ── Filter buttons ──
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('active', 'bg-cyber-accent/10', 'border-cyber-accent', 'text-cyber-accent');
+        b.classList.add('border-cyber-border', 'text-cyber-muted');
+      });
+      btn.classList.add('active', 'bg-cyber-accent/10', 'border-cyber-accent', 'text-cyber-accent');
+      btn.classList.remove('border-cyber-border', 'text-cyber-muted');
+      renderCards(btn.dataset.filter);
+    });
+  });
+
+  // ── Counter animation ──
+  function animateCounter(el, target) {
+    let current = 0;
+    const step = Math.max(1, Math.floor(target / 40));
+    const interval = setInterval(() => {
+      current += step;
+      if (current >= target) { current = target; clearInterval(interval); }
+      el.textContent = current;
+    }, 30);
+  }
+
+  // ── Intersection Observer for fade-in + counter trigger ──
+  let counterAnimated = false;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        if (entry.target.id === 'status' && !counterAnimated) {
+          counterAnimated = true;
+          animateCounter(document.getElementById('stat-streak'), 15);
+          animateCounter(document.getElementById('stat-total'), 42);
+          animateCounter(document.getElementById('stat-languages'), 8);
+          animateCounter(document.getElementById('stat-commits'), 347);
+        }
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.fade-section').forEach(s => observer.observe(s));
+
+  // ── Mobile menu toggle ──
+  document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+    document.getElementById('mobile-menu').classList.toggle('hidden');
+  });
+  document.querySelectorAll('#mobile-menu a').forEach(a => {
+    a.addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.add('hidden');
+    });
+  });
+
+  // ── Smooth scroll ──
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+  </script>
+</body>
 </html>
